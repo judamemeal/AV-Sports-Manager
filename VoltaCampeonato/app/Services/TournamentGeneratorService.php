@@ -302,18 +302,11 @@ class TournamentGeneratorService
             if ($qualifiedPerGroup >= $teamsPerGroup) {
                 $errors[] = "Los clasificados por grupo ({$qualifiedPerGroup}) deben ser menos que los equipos por grupo ({$teamsPerGroup}).";
             }
-
-            $totalQualified = $groupsCount * $qualifiedPerGroup;
-            $validKnockoutSizes = [2, 4, 8, 16, 32];
-            if ($config['type'] === 'groups_knockout' && !in_array($totalQualified, $validKnockoutSizes)) {
-                $errors[] = "El total de clasificados ({$totalQualified}) debe ser 2, 4, 8, 16 o 32 para la fase eliminatoria.";
-            }
         }
 
         if ($config['type'] === 'knockout') {
-            $validSizes = [2, 4, 8, 16, 32];
-            if (!in_array($teamCount, $validSizes)) {
-                $errors[] = "Para eliminación directa se necesitan 2, 4, 8, 16 o 32 equipos. Hay {$teamCount}.";
+            if ($teamCount < 2) {
+                $errors[] = "Para eliminación directa se necesitan al menos 2 equipos. Hay {$teamCount}.";
             }
         }
 

@@ -28,6 +28,7 @@ class GameMatch extends Model
         'status',
         'home_score',
         'away_score',
+        'match_duration',
         'bracket_position',
         'next_match_id',
     ];
@@ -39,6 +40,7 @@ class GameMatch extends Model
             'status' => MatchStatus::class,
             'home_score' => 'integer',
             'away_score' => 'integer',
+            'match_duration' => 'integer',
             'bracket_position' => 'integer',
         ];
     }

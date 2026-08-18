@@ -26,6 +26,7 @@ class MatchResource extends JsonResource
             'status_color' => $this->status?->color(),
             'home_score' => $this->home_score,
             'away_score' => $this->away_score,
+            'match_duration' => $this->match_duration,
             'bracket_position' => $this->bracket_position,
             'home_team' => new TeamResource($this->whenLoaded('homeTeam')),
             'away_team' => new TeamResource($this->whenLoaded('awayTeam')),

@@ -20,6 +20,7 @@ class StoreMatchRequest extends FormRequest
             'round_id' => ['nullable', 'exists:rounds,id'],
             'home_team_id' => ['nullable', 'exists:teams,id'],
             'away_team_id' => ['nullable', 'exists:teams,id', 'different:home_team_id'],
+            'match_duration' => ['nullable', 'integer', 'min:1', 'max:200'],
             'match_date' => ['nullable', 'date'],
             'match_time' => ['nullable', 'date_format:H:i'],
             'venue' => ['nullable', 'string', 'max:255'],

@@ -19,7 +19,7 @@
               {{ timerRunning ? '⏸ Pausar' : '▶ Reanudar' }}
             </button>
             <button @click="resetTimer(0)" class="px-3 py-1 rounded-lg bg-surface-700 text-surface-300 text-xs">1T (00:00)</button>
-            <button @click="resetTimer(45)" class="px-3 py-1 rounded-lg bg-surface-700 text-surface-300 text-xs">2T (45:00)</button>
+            <button @click="resetTimer(match.match_duration ? Math.floor(match.match_duration / 2) : 45)" class="px-3 py-1 rounded-lg bg-surface-700 text-surface-300 text-xs">2T ({{ match.match_duration ? Math.floor(match.match_duration / 2).toString().padStart(2, '0') : '45' }}:00)</button>
           </div>
         </div>
 

@@ -63,8 +63,15 @@ class QualificationService
         $group = Group::find($match->group_id);
         if (!$group) return;
 
+        $format = $group->phase->tournamentFormat;
+        $isRoundTrip = $format && $format->is_round_trip;
+
         $totalTeams = $group->teams()->count();
         $totalMatchesNeeded = ($totalTeams * ($totalTeams - 1)) / 2;
+        if ($isRoundTrip) {
+            $totalMatchesNeeded *= 2;
+        }
+
         $finishedMatches = GameMatch::where('group_id', $group->id)
             ->where('status', 'finished')
             ->count();
@@ -108,13 +115,20 @@ class QualificationService
      */
     protected function checkAllGroupsComplete(Phase $groupPhase, Phase $nextPhase): void
     {
+        $format = $groupPhase->tournamentFormat;
+        $isRoundTrip = $format && $format->is_round_trip;
+        
         $allGroups = $groupPhase->groups;
         $allComplete = true;
-        $qualifiedTeams = [];
+        $qualifiersByGroup = [];
 
         foreach ($allGroups as $group) {
             $totalTeams = $group->teams()->count();
             $totalMatchesNeeded = ($totalTeams * ($totalTeams - 1)) / 2;
+            if ($isRoundTrip) {
+                $totalMatchesNeeded *= 2;
+            }
+
             $finishedMatches = GameMatch::where('group_id', $group->id)
                 ->where('status', 'finished')
                 ->count();
@@ -124,12 +138,39 @@ class QualificationService
                 break;
             }
 
-            $qualifiers = $this->getGroupQualifiers($group);
-            $qualifiedTeams = array_merge($qualifiedTeams, $qualifiers);
+            $qualifiersByGroup[] = $this->getGroupQualifiers($group);
         }
 
         if (!$allComplete) {
             return;
+        }
+
+        // Interleave qualifiers (cross-seeding)
+        $qualifiedTeams = [];
+        $groupsCount = count($qualifiersByGroup);
+        if ($groupsCount > 0) {
+            $positions = count($qualifiersByGroup[0]);
+            
+            if ($groupsCount === 2 && $positions === 2) {
+                // Standard 1A vs 2B, 1B vs 2A
+                $qualifiedTeams = [
+                    $qualifiersByGroup[0][0] ?? null,
+                    $qualifiersByGroup[1][1] ?? null,
+                    $qualifiersByGroup[1][0] ?? null,
+                    $qualifiersByGroup[0][1] ?? null,
+                ];
+            } else {
+                // Generic interleave: alternate firsts, then alternate seconds, etc.
+                for ($p = 0; $p < $positions; $p++) {
+                    for ($g = 0; $g < $groupsCount; $g++) {
+                        // Alternate order for even positions to mix up matches
+                        $groupIndex = ($p % 2 === 0) ? $g : ($groupsCount - 1 - $g);
+                        if (isset($qualifiersByGroup[$groupIndex][$p])) {
+                            $qualifiedTeams[] = $qualifiersByGroup[$groupIndex][$p];
+                        }
+                    }
+                }
+            }
         }
 
         // Mark group phase as completed

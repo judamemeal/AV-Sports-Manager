@@ -94,11 +94,12 @@ class ChampionshipController extends Controller
 
         $scorers = Player::whereIn('team_id', $teamIds)
             ->withCount('goals')
-            ->having('goals_count', '>', 0)
             ->with('team:id,name,color')
-            ->orderByDesc('goals_count')
-            ->limit(20)
             ->get()
+            ->filter(fn ($player) => $player->goals_count > 0)
+            ->sortByDesc('goals_count')
+            ->take(20)
+            ->values()
             ->map(fn ($player) => [
                 'id' => $player->id,
                 'full_name' => $player->full_name,

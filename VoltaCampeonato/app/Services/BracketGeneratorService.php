@@ -20,12 +20,13 @@ class BracketGeneratorService
         ?string $matchTime = null,
         array $venues = [],
     ): array {
-        $rounds = $this->calculateRounds($teamCount);
+        $powerOfTwo = $this->calculatePowerOfTwo($teamCount);
+        $rounds = (int) log($powerOfTwo, 2);
         $allMatches = [];
         $date = $startDate ? Carbon::parse($startDate) : Carbon::now()->addDays(7);
 
-        $roundNames = $this->getRoundNames($teamCount);
-        $matchesInRound = $teamCount / 2;
+        $roundNames = $this->getRoundNames($powerOfTwo);
+        $matchesInRound = $powerOfTwo / 2;
         $previousRoundMatches = [];
 
         foreach ($roundNames as $roundIndex => $roundName) {
@@ -83,36 +84,68 @@ class BracketGeneratorService
         usort($matches, fn ($a, $b) => $a->bracket_position - $b->bracket_position);
 
         $matchIndex = 0;
-        for ($i = 0; $i < count($teamIds); $i += 2) {
+        
+        // Pad the teamIds array with nulls to reach the power of 2 size
+        $powerOfTwo = count($matches) * 2;
+        while (count($teamIds) < $powerOfTwo) {
+            $teamIds[] = null;
+        }
+
+        for ($i = 0; $i < $powerOfTwo; $i += 2) {
             if (isset($matches[$matchIndex])) {
-                $matches[$matchIndex]->update([
-                    'home_team_id' => $teamIds[$i] ?? null,
-                    'away_team_id' => $teamIds[$i + 1] ?? null,
+                $homeId = $teamIds[$i] ?? null;
+                $awayId = $teamIds[$i + 1] ?? null;
+
+                $match = $matches[$matchIndex];
+                $match->update([
+                    'home_team_id' => $homeId,
+                    'away_team_id' => $awayId,
                 ]);
+
+                // Auto-advance if there is a Bye
+                if ($homeId !== null && $awayId === null) {
+                    $match->update(['status' => 'finished', 'home_score' => 1, 'away_score' => 0]);
+                    app(QualificationService::class)->processMatchResult($match);
+                } elseif ($homeId === null && $awayId !== null) {
+                    $match->update(['status' => 'finished', 'home_score' => 0, 'away_score' => 1]);
+                    app(QualificationService::class)->processMatchResult($match);
+                }
             }
             $matchIndex++;
         }
     }
 
     /**
-     * Calculate number of rounds needed.
+     * Calculate the next power of 2.
      */
-    protected function calculateRounds(int $teamCount): int
+    protected function calculatePowerOfTwo(int $teamCount): int
     {
-        return (int) ceil(log($teamCount, 2));
+        if ($teamCount < 2) return 2;
+        return pow(2, ceil(log($teamCount, 2)));
     }
 
     /**
-     * Get round names based on team count.
+     * Get round names based on power of 2 team count.
      */
-    protected function getRoundNames(int $teamCount): array
+    protected function getRoundNames(int $powerOfTwo): array
     {
         $names = [];
+        $currentPower = $powerOfTwo;
 
-        if ($teamCount >= 16) $names[] = 'Octavos de Final';
-        if ($teamCount >= 8) $names[] = 'Cuartos de Final';
-        if ($teamCount >= 4) $names[] = 'Semifinal';
-        if ($teamCount >= 2) $names[] = 'Final';
+        while ($currentPower >= 2) {
+            if ($currentPower === 2) {
+                $names[] = 'Final';
+            } elseif ($currentPower === 4) {
+                $names[] = 'Semifinal';
+            } elseif ($currentPower === 8) {
+                $names[] = 'Cuartos de Final';
+            } elseif ($currentPower === 16) {
+                $names[] = 'Octavos de Final';
+            } else {
+                $names[] = 'Ronda de ' . $currentPower;
+            }
+            $currentPower /= 2;
+        }
 
         return $names;
     }

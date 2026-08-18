@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Administrador',
             'email' => 'admin@volta.edu',
-            'password' => bcrypt('password'),
+            'password' => 'Vt9#qL2!xP7@rK4$zM', // Admin password has been updated.
             'role' => 'admin',
         ]);
 
@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Espectador',
             'email' => 'user@volta.edu',
-            'password' => bcrypt('password'),
+            'password' => 'password123', // Demo user password
             'role' => 'user',
         ]);
 

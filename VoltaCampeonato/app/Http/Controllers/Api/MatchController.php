@@ -83,7 +83,7 @@ class MatchController extends Controller
     {
         $match->update($request->validated());
 
-        return new MatchResource($match->load(['homeTeam', 'awayTeam']));
+        return new MatchResource($match->load(['homeTeam.players', 'awayTeam.players']));
     }
 
     public function destroy(GameMatch $match): JsonResponse
@@ -110,7 +110,7 @@ class MatchController extends Controller
 
         return response()->json([
             'message' => 'Partido iniciado.',
-            'data' => new MatchResource($match->load(['homeTeam', 'awayTeam', 'events'])),
+            'data' => new MatchResource($match->load(['homeTeam.players', 'awayTeam.players', 'events'])),
         ]);
     }
 
@@ -121,6 +121,17 @@ class MatchController extends Controller
     {
         if ($match->status->value !== 'in_progress') {
             return response()->json(['message' => 'Solo se pueden registrar eventos en partidos en juego.'], 422);
+        }
+
+        if ($match->home_team_id != $request->team_id && $match->away_team_id != $request->team_id) {
+            return response()->json(['message' => 'El equipo no participa en este partido.'], 422);
+        }
+
+        if ($request->filled('player_id')) {
+            $player = \App\Models\Player::find($request->player_id);
+            if ($player && $player->team_id != $request->team_id) {
+                return response()->json(['message' => 'El jugador no pertenece al equipo seleccionado.'], 422);
+            }
         }
 
         $event = $match->events()->create($request->validated());
@@ -164,7 +175,7 @@ class MatchController extends Controller
         // Check if we need to advance teams in knockout
         $this->qualificationService->processMatchResult($match);
 
-        $match->load(['homeTeam', 'awayTeam', 'events.player']);
+        $match->load(['homeTeam.players', 'awayTeam.players', 'events.player']);
 
         return response()->json([
             'message' => 'Partido finalizado. Resultados actualizados.',

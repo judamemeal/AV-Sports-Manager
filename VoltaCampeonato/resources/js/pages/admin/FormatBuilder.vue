@@ -54,9 +54,46 @@
               <div><label class="block text-sm font-medium text-surface-300 mb-1.5">Equipos/Grupo</label><input v-model.number="config.teams_per_group" type="number" min="2" max="10" class="w-full px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" /></div>
               <div><label class="block text-sm font-medium text-surface-300 mb-1.5">Clasificados/Grupo</label><input v-model.number="config.qualified_per_group" type="number" min="1" max="8" class="w-full px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" /></div>
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4 mt-4">
               <div><label class="block text-sm font-medium text-surface-300 mb-1.5">Fecha inicio</label><input v-model="config.start_date" type="date" class="w-full px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" /></div>
               <div><label class="block text-sm font-medium text-surface-300 mb-1.5">Hora partidos</label><input v-model="config.match_time" type="time" class="w-full px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" /></div>
+            </div>
+
+            <!-- Custom Format Builder -->
+            <div v-if="config.type === 'custom'" class="mt-6 border-t border-surface-700 pt-6">
+              <div class="flex items-center justify-between mb-4">
+                <h4 class="text-white font-bold">Fases del Torneo</h4>
+                <button @click="addPhase" class="px-3 py-1.5 rounded bg-primary-500/20 text-primary-400 text-sm hover:bg-primary-500/30">+ Añadir Fase</button>
+              </div>
+              <div v-for="(phase, index) in config.phases" :key="index" class="p-4 rounded-lg bg-surface-800/50 border border-surface-700 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                  <h5 class="text-sm font-bold text-white">Fase {{ index + 1 }}</h5>
+                  <button @click="config.phases.splice(index, 1)" class="text-danger-400 hover:text-danger-300 text-sm">Eliminar</button>
+                </div>
+                <div class="grid grid-cols-3 gap-3 mb-3">
+                  <div>
+                    <label class="block text-xs text-surface-400 mb-1">Nombre</label>
+                    <input v-model="phase.name" class="w-full px-3 py-2 rounded bg-surface-800 border border-surface-600 text-white text-sm" placeholder="Ej. Eliminatorias" />
+                  </div>
+                  <div>
+                    <label class="block text-xs text-surface-400 mb-1">Tipo</label>
+                    <select v-model="phase.type" class="w-full px-3 py-2 rounded bg-surface-800 border border-surface-600 text-white text-sm">
+                      <option value="group">Grupos</option>
+                      <option value="knockout">Eliminación</option>
+                      <option value="league">Liga</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs text-surface-400 mb-1">Equipos en Fase</label>
+                    <input v-model.number="phase.team_count" type="number" min="2" class="w-full px-3 py-2 rounded bg-surface-800 border border-surface-600 text-white text-sm" />
+                  </div>
+                </div>
+                <div v-if="phase.type === 'group'" class="grid grid-cols-2 gap-3 p-3 bg-surface-800 rounded border border-surface-700">
+                  <div><label class="block text-xs text-surface-400 mb-1">Nº Grupos</label><input v-model.number="phase.configuration.groups_count" type="number" min="1" class="w-full px-3 py-2 rounded bg-surface-900 border border-surface-600 text-white text-sm" /></div>
+                  <div><label class="block text-xs text-surface-400 mb-1">Clasificados/Grupo</label><input v-model.number="phase.configuration.qualified_per_group" type="number" min="1" class="w-full px-3 py-2 rounded bg-surface-900 border border-surface-600 text-white text-sm" /></div>
+                </div>
+              </div>
+              <p v-if="!config.phases.length" class="text-surface-500 text-sm text-center py-4">No hay fases. Añade al menos una fase.</p>
             </div>
           </div>
         </div>
@@ -119,6 +156,7 @@ const formatTypes = [
   { value: 'groups', label: 'Grupos', icon: '🏆', desc: 'Fase de grupos' },
   { value: 'knockout', label: 'Eliminación', icon: '⚡', desc: 'Eliminación directa' },
   { value: 'groups_knockout', label: 'Grupos + Elim.', icon: '🔥', desc: 'Grupos y luego llaves' },
+  { value: 'custom', label: 'Personalizado', icon: '⚙️', desc: 'Fases a medida' },
 ];
 
 const config = reactive({
@@ -131,7 +169,20 @@ const config = reactive({
   start_date: '',
   match_time: '10:00',
   venues: [],
+  phases: [],
 });
+
+function addPhase() {
+  config.phases.push({
+    name: 'Fase ' + (config.phases.length + 1),
+    type: 'group',
+    team_count: config.team_ids.length || 4,
+    configuration: {
+      groups_count: 2,
+      qualified_per_group: 2,
+    }
+  });
+}
 
 function toggleTeam(id) {
   const idx = config.team_ids.indexOf(id);

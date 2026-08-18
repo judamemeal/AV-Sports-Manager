@@ -13,6 +13,9 @@
         <div><label class="block text-sm font-medium text-surface-300 mb-1.5">Fecha</label><input v-model="form.match_date" type="date" class="w-full px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" /></div>
         <div><label class="block text-sm font-medium text-surface-300 mb-1.5">Hora</label><input v-model="form.match_time" type="time" class="w-full px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" /></div>
       </div>
+      <div class="grid grid-cols-1 gap-4">
+        <div><label class="block text-sm font-medium text-surface-300 mb-1.5">Duración (minutos)</label><input v-model.number="form.match_duration" type="number" min="1" max="200" class="w-full px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" /></div>
+      </div>
       <div class="grid grid-cols-2 gap-4">
         <div><label class="block text-sm font-medium text-surface-300 mb-1.5">Lugar</label><input v-model="form.venue" class="w-full px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" placeholder="Cancha principal" /></div>
         <div><label class="block text-sm font-medium text-surface-300 mb-1.5">Árbitro</label><input v-model="form.referee" class="w-full px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" /></div>
@@ -34,7 +37,7 @@ const notify = useNotificationStore();
 const route = useRoute(); const router = useRouter();
 const isEdit = computed(() => !!route.params.id);
 const submitting = ref(false); const championships = ref([]); const teams = ref([]);
-const form = reactive({ championship_id: '', home_team_id: '', away_team_id: '', match_date: '', match_time: '', venue: '', referee: '' });
+const form = reactive({ championship_id: '', home_team_id: '', away_team_id: '', match_date: '', match_time: '', venue: '', referee: '', match_duration: 30 });
 async function loadTeams() { if (!form.championship_id) { teams.value = []; return; } try { const d = await get('/equipos', { championship_id: form.championship_id }); teams.value = d.data || []; } catch {} }
 onMounted(async () => {
   try { const d = await get('/campeonatos'); championships.value = d.data || []; } catch {}
