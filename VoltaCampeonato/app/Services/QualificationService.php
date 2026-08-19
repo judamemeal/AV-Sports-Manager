@@ -145,25 +145,39 @@ class QualificationService
             return;
         }
 
-        // Interleave qualifiers (cross-seeding)
+        // Interleave qualifiers (cross-seeding logic)
         $qualifiedTeams = [];
         $groupsCount = count($qualifiersByGroup);
         if ($groupsCount > 0) {
-            $positions = count($qualifiersByGroup[0]);
-            
-            if ($groupsCount === 2 && $positions === 2) {
-                // Standard 1A vs 2B, 1B vs 2A
-                $qualifiedTeams = [
-                    $qualifiersByGroup[0][0] ?? null,
-                    $qualifiersByGroup[1][1] ?? null,
-                    $qualifiersByGroup[1][0] ?? null,
-                    $qualifiersByGroup[0][1] ?? null,
-                ];
+            $positions = count($qualifiersByGroup[0]); // e.g. 2 qualifiers per group
+
+            // Determine if we have pairs of groups (A-B, C-D, E-F, etc.)
+            // We want A1 vs B2, C1 vs D2 in Upper Bracket, and B1 vs A2, D1 vs C2 in Lower Bracket.
+            $upperBracket = [];
+            $lowerBracket = [];
+
+            if ($groupsCount % 2 === 0 && $positions === 2) {
+                // Perfect setup for cross-seeding (1st vs 2nd)
+                for ($g = 0; $g < $groupsCount; $g += 2) {
+                    $group1 = $qualifiersByGroup[$g];
+                    $group2 = $qualifiersByGroup[$g + 1];
+
+                    // M1: 1st Group1 vs 2nd Group2 -> Upper
+                    $upperBracket[] = $group1[0] ?? null; // Home M1
+                    $upperBracket[] = $group2[1] ?? null; // Away M1
+
+                    // M2: 1st Group2 vs 2nd Group1 -> Lower
+                    $lowerBracket[] = $group2[0] ?? null; // Home M2
+                    $lowerBracket[] = $group1[1] ?? null; // Away M2
+                }
+                
+                // Merge upper and lower to place them in opposite sides of the bracket
+                $qualifiedTeams = array_merge($upperBracket, array_reverse($lowerBracket));
             } else {
-                // Generic interleave: alternate firsts, then alternate seconds, etc.
+                // Generic interleave if it's an odd format or more than 2 qualifiers
+                // Just try to spread out the 1sts and 2nds
                 for ($p = 0; $p < $positions; $p++) {
                     for ($g = 0; $g < $groupsCount; $g++) {
-                        // Alternate order for even positions to mix up matches
                         $groupIndex = ($p % 2 === 0) ? $g : ($groupsCount - 1 - $g);
                         if (isset($qualifiersByGroup[$groupIndex][$p])) {
                             $qualifiedTeams[] = $qualifiersByGroup[$groupIndex][$p];

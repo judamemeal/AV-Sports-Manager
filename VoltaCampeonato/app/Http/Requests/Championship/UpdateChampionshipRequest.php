@@ -24,6 +24,8 @@ class UpdateChampionshipRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'regulations' => ['nullable', 'string'],
             'status' => ['nullable', 'string', 'in:upcoming,active,finished'],
+            'team_ids' => ['nullable', 'array'],
+            'team_ids.*' => ['integer', 'exists:teams,id'],
         ];
     }
 }

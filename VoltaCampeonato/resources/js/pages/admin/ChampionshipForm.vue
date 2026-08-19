@@ -16,8 +16,16 @@
         <div><label class="block text-sm font-medium text-surface-300 mb-1.5">Fecha Inicio</label><input v-model="form.start_date" type="date" class="w-full px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" /></div>
         <div><label class="block text-sm font-medium text-surface-300 mb-1.5">Fecha Fin</label><input v-model="form.end_date" type="date" class="w-full px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" /></div>
       </div>
-      <div><label class="block text-sm font-medium text-surface-300 mb-1.5">Estado</label>
-        <select v-model="form.status" class="w-full px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50"><option value="upcoming">Próximo</option><option value="active">Activo</option><option value="finished">Finalizado</option></select>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm font-medium text-surface-300 mb-1.5">Estado</label>
+          <select v-model="form.status" class="w-full px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50"><option value="upcoming">Próximo</option><option value="active">Activo</option><option value="finished">Finalizado</option></select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-surface-300 mb-1.5">Equipos Participantes (Ctrl+Click para varios)</label>
+          <select multiple v-model="form.team_ids" class="w-full h-24 px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50">
+            <option v-for="t in allTeams" :key="t.id" :value="t.id">{{ t.name }}</option>
+          </select>
+        </div>
       </div>
       <div><label class="block text-sm font-medium text-surface-300 mb-1.5">Descripción</label><textarea v-model="form.description" rows="3" class="w-full px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none" /></div>
       <div><label class="block text-sm font-medium text-surface-300 mb-1.5">Reglamento</label><textarea v-model="form.regulations" rows="4" class="w-full px-4 py-2.5 rounded-lg bg-surface-800 border border-surface-700 text-white placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none" /></div>
@@ -39,8 +47,30 @@ const route = useRoute();
 const router = useRouter();
 const isEdit = computed(() => !!route.params.id);
 const submitting = ref(false);
-const form = reactive({ name: '', year: 2026, sport: '', category: '', course_level: '', start_date: '', end_date: '', description: '', regulations: '', status: 'upcoming' });
-onMounted(async () => { if (isEdit.value) { try { const d = await get(`/campeonatos/${route.params.id}`); const c = d.data || d; Object.keys(form).forEach(k => { if (c[k] !== undefined && c[k] !== null) form[k] = c[k]; }); } catch {} } });
+const allTeams = ref([]);
+const form = reactive({ name: '', year: 2026, sport: '', category: '', course_level: '', start_date: '', end_date: '', description: '', regulations: '', status: 'upcoming', team_ids: [] });
+
+onMounted(async () => {
+  try {
+    const d = await get('/equipos');
+    allTeams.value = d.data || [];
+  } catch {}
+
+  if (isEdit.value) { 
+    try { 
+      const d = await get(`/campeonatos/${route.params.id}`); 
+      const c = d.data || d; 
+      Object.keys(form).forEach(k => { 
+        if (k === 'team_ids') {
+           form.team_ids = (c.teams || []).map(t => t.id);
+        } else if (c[k] !== undefined && c[k] !== null) {
+           form[k] = c[k]; 
+        }
+      }); 
+    } catch {} 
+  } 
+});
+
 async function handleSubmit() {
   submitting.value = true;
   try {

@@ -14,7 +14,8 @@ class UpdateTeamRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'championship_id' => ['sometimes', 'exists:championships,id'],
+            'championship_ids' => ['nullable', 'array'],
+            'championship_ids.*' => ['integer', 'exists:championships,id'],
             'name' => ['sometimes', 'string', 'max:255'],
             'course' => ['nullable', 'string', 'max:100'],
             'parallel' => ['nullable', 'string', 'max:10'],

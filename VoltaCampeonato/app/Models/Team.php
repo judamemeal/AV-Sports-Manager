@@ -13,7 +13,6 @@ class Team extends Model
     use HasFactory;
 
     protected $fillable = [
-        'championship_id',
         'name',
         'course',
         'parallel',
@@ -31,9 +30,9 @@ class Team extends Model
         ];
     }
 
-    public function championship(): BelongsTo
+    public function championships(): BelongsToMany
     {
-        return $this->belongsTo(Championship::class);
+        return $this->belongsToMany(Championship::class);
     }
 
     public function players(): HasMany

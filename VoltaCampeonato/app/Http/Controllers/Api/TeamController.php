@@ -19,10 +19,12 @@ class TeamController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = Team::with('championship:id,name')->withCount('players');
+        $query = Team::with('championships:id,name')->withCount('players');
 
         if ($request->filled('championship_id')) {
-            $query->where('championship_id', $request->championship_id);
+            $query->whereHas('championships', function ($q) use ($request) {
+                $q->where('championships.id', $request->championship_id);
+            });
         }
 
         if ($request->filled('category')) {
@@ -41,6 +43,8 @@ class TeamController extends Controller
     public function store(StoreTeamRequest $request): JsonResponse
     {
         $data = $request->validated();
+        $championshipIds = $data['championship_ids'] ?? [];
+        unset($data['championship_ids']);
 
         if ($request->hasFile('logo')) {
             $data['logo_path'] = $request->file('logo')->store('team-logos', 'public');
@@ -48,12 +52,16 @@ class TeamController extends Controller
 
         $team = Team::create($data);
 
-        return response()->json(new TeamResource($team), 201);
+        if (!empty($championshipIds)) {
+            $team->championships()->sync($championshipIds);
+        }
+
+        return response()->json(new TeamResource($team->load('championships')), 201);
     }
 
     public function show(Team $team): TeamResource
     {
-        $team->load(['championship:id,name', 'players', 'standings']);
+        $team->load(['championships:id,name', 'players', 'standings']);
         $team->loadCount('players');
 
         return new TeamResource($team);
@@ -62,6 +70,8 @@ class TeamController extends Controller
     public function update(UpdateTeamRequest $request, Team $team): TeamResource
     {
         $data = $request->validated();
+        $championshipIds = $data['championship_ids'] ?? null;
+        unset($data['championship_ids']);
 
         if ($request->hasFile('logo')) {
             $data['logo_path'] = $request->file('logo')->store('team-logos', 'public');
@@ -69,7 +79,11 @@ class TeamController extends Controller
 
         $team->update($data);
 
-        return new TeamResource($team);
+        if (is_array($championshipIds)) {
+            $team->championships()->sync($championshipIds);
+        }
+
+        return new TeamResource($team->load('championships'));
     }
 
     public function destroy(Team $team): JsonResponse

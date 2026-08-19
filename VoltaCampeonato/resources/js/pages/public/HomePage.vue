@@ -1,212 +1,173 @@
 <template>
-  <div>
-    <!-- Hero -->
+  <div class="animate-fade-in pb-20">
+    <!-- Hero / Title -->
     <section class="relative overflow-hidden">
       <div class="absolute inset-0 bg-gradient-to-br from-primary-900/30 via-surface-950 to-accent-900/20" />
-      <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0); background-size: 40px 40px;" />
-
-      <div class="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-        <div class="text-center animate-fade-in">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-400 text-xs font-medium mb-6">
-            <span class="w-2 h-2 rounded-full bg-primary-400 badge-live" />
-            Campeonato Activo
-          </div>
-          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight">
-            {{ championship?.name || 'VoltaCampeonato' }}
-          </h1>
-          <p class="mt-4 text-lg text-surface-400 max-w-2xl mx-auto">
-            {{ championship?.description || 'Sistema de campeonatos deportivos de la Unidad Educativa' }}
-          </p>
-
-          <div v-if="championship" class="mt-8 flex flex-wrap justify-center gap-4">
-            <div class="glass rounded-xl px-5 py-3 text-center">
-              <p class="text-2xl font-bold text-primary-400">{{ stats?.total_teams || 0 }}</p>
-              <p class="text-xs text-surface-400 mt-1">Equipos</p>
-            </div>
-            <div class="glass rounded-xl px-5 py-3 text-center">
-              <p class="text-2xl font-bold text-accent-400">{{ stats?.total_matches || 0 }}</p>
-              <p class="text-xs text-surface-400 mt-1">Partidos</p>
-            </div>
-            <div class="glass rounded-xl px-5 py-3 text-center">
-              <p class="text-2xl font-bold text-warning-500">{{ stats?.total_goals || 0 }}</p>
-              <p class="text-xs text-surface-400 mt-1">Goles</p>
-            </div>
-          </div>
-        </div>
+      <div class="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 text-center">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-white leading-tight">
+          Volta<span class="text-primary-400">Campeonato</span>
+        </h1>
+        <p class="mt-4 text-lg text-surface-400 max-w-2xl mx-auto">
+          Sistema de campeonatos deportivos. Información detallada y en tiempo real.
+        </p>
       </div>
     </section>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6">
-      <!-- Live Matches -->
-      <section v-if="liveMatches.length" class="mt-10 animate-slide-up">
-        <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-green-500 badge-live" /> En Vivo
-        </h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <router-link v-for="m in liveMatches" :key="m.id" :to="`/partidos/${m.id}`"
-            class="card-gradient rounded-xl p-5 glow-live hover:scale-[1.02] transition-transform cursor-pointer">
-            <div class="flex items-center justify-between">
-              <div class="text-center flex-1">
-                <div class="w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm" :style="{ backgroundColor: m.home_team?.color || '#64748b' }">
-                  {{ m.home_team?.name?.charAt(0) }}
-                </div>
-                <p class="text-sm font-medium text-white mt-2 truncate">{{ m.home_team?.name }}</p>
-              </div>
-              <div class="px-4 text-center">
-                <p class="text-3xl font-extrabold text-white">{{ m.home_score }} <span class="text-surface-500">-</span> {{ m.away_score }}</p>
-                <span class="inline-flex items-center gap-1 text-xs text-green-400 font-medium mt-1">
-                  <span class="w-1.5 h-1.5 rounded-full bg-green-400 badge-live" /> EN VIVO
-                </span>
-              </div>
-              <div class="text-center flex-1">
-                <div class="w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm" :style="{ backgroundColor: m.away_team?.color || '#64748b' }">
-                  {{ m.away_team?.name?.charAt(0) }}
-                </div>
-                <p class="text-sm font-medium text-white mt-2 truncate">{{ m.away_team?.name }}</p>
-              </div>
-            </div>
-          </router-link>
-        </div>
-      </section>
-
-      <!-- Upcoming Matches -->
-      <section v-if="upcomingMatches.length" class="mt-12 animate-slide-up">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-bold text-white">Próximos Partidos</h2>
-          <router-link to="/partidos" class="text-sm text-primary-400 hover:text-primary-300">Ver todos →</router-link>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <router-link v-for="m in upcomingMatches" :key="m.id" :to="`/partidos/${m.id}`"
-            class="card-gradient rounded-xl p-5 hover:border-primary-500/30 transition-all cursor-pointer group">
-            <div class="text-xs text-surface-500 mb-3">
-              {{ formatDate(m.match_date) }} • {{ m.match_time || '--:--' }} • {{ m.venue || 'Por definir' }}
-            </div>
-            <div class="flex items-center justify-between">
-              <div class="text-center flex-1">
-                <div class="w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm" :style="{ backgroundColor: m.home_team?.color || '#64748b' }">
-                  {{ m.home_team?.name?.charAt(0) }}
-                </div>
-                <p class="text-sm font-medium text-white mt-2 truncate">{{ m.home_team?.name }}</p>
-              </div>
-              <div class="px-4 text-center">
-                <span class="text-lg font-bold text-surface-500 group-hover:text-primary-400 transition-colors">VS</span>
-              </div>
-              <div class="text-center flex-1">
-                <div class="w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm" :style="{ backgroundColor: m.away_team?.color || '#64748b' }">
-                  {{ m.away_team?.name?.charAt(0) }}
-                </div>
-                <p class="text-sm font-medium text-white mt-2 truncate">{{ m.away_team?.name }}</p>
-              </div>
-            </div>
-          </router-link>
-        </div>
-      </section>
-
-      <!-- Standings + Top Scorers -->
-      <div class="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Standings -->
-        <div class="lg:col-span-2 card-gradient rounded-xl p-6 animate-slide-up">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-white">Tabla de Posiciones</h2>
-            <router-link v-if="championship" :to="`/posiciones/${championship.id}`" class="text-sm text-primary-400 hover:text-primary-300">Completa →</router-link>
-          </div>
-          <div v-if="standings.length" class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="text-surface-400 text-xs border-b border-surface-700">
-                  <th class="text-left py-2 px-2">#</th>
-                  <th class="text-left py-2 px-2">Equipo</th>
-                  <th class="text-center py-2 px-1">PJ</th>
-                  <th class="text-center py-2 px-1">PG</th>
-                  <th class="text-center py-2 px-1">PE</th>
-                  <th class="text-center py-2 px-1">PP</th>
-                  <th class="text-center py-2 px-1">DG</th>
-                  <th class="text-center py-2 px-1 font-bold text-primary-400">PTS</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(s, i) in standings.slice(0, 8)" :key="s.id" class="border-b border-surface-800/50 hover:bg-surface-800/30 transition-colors">
-                  <td class="py-2.5 px-2 font-bold" :class="i < 2 ? 'text-primary-400' : 'text-surface-400'">{{ i + 1 }}</td>
-                  <td class="py-2.5 px-2">
-                    <div class="flex items-center gap-2">
-                      <div class="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" :style="{ backgroundColor: s.team?.color || '#64748b' }">
-                        {{ s.team?.name?.charAt(0) }}
-                      </div>
-                      <span class="text-white font-medium">{{ s.team?.name }}</span>
-                    </div>
-                  </td>
-                  <td class="text-center text-surface-300 py-2.5 px-1">{{ s.played }}</td>
-                  <td class="text-center text-surface-300 py-2.5 px-1">{{ s.won }}</td>
-                  <td class="text-center text-surface-300 py-2.5 px-1">{{ s.drawn }}</td>
-                  <td class="text-center text-surface-300 py-2.5 px-1">{{ s.lost }}</td>
-                  <td class="text-center py-2.5 px-1" :class="s.goal_difference > 0 ? 'text-primary-400' : s.goal_difference < 0 ? 'text-danger-500' : 'text-surface-400'">
-                    {{ s.goal_difference > 0 ? '+' : '' }}{{ s.goal_difference }}
-                  </td>
-                  <td class="text-center font-bold text-white py-2.5 px-1">{{ s.points }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p v-else class="text-surface-500 text-sm py-8 text-center">No hay datos de posiciones aún.</p>
-        </div>
-
-        <!-- Top Scorers -->
-        <div class="card-gradient rounded-xl p-6 animate-slide-up">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-white">🏆 Goleadores</h2>
-            <router-link v-if="championship" :to="`/estadisticas/${championship.id}`" class="text-sm text-primary-400 hover:text-primary-300">Ver más →</router-link>
-          </div>
-          <div v-if="scorers.length" class="space-y-3">
-            <div v-for="(scorer, i) in scorers.slice(0, 8)" :key="scorer.id"
-              class="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-800/30 transition-colors">
-              <span class="w-6 text-center font-bold" :class="i === 0 ? 'text-warning-500' : i === 1 ? 'text-surface-300' : i === 2 ? 'text-orange-400' : 'text-surface-500'">
-                {{ i + 1 }}
-              </span>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-white truncate">{{ scorer.full_name }}</p>
-                <p class="text-xs text-surface-500 truncate">{{ scorer.team?.name }}</p>
-              </div>
-              <span class="text-lg font-bold text-primary-400">{{ scorer.goals }}</span>
-            </div>
-          </div>
-          <p v-else class="text-surface-500 text-sm py-8 text-center">Sin goles registrados.</p>
-        </div>
-      </div>
-
-      <!-- Recent Results -->
-      <section v-if="recentResults.length" class="mt-12 mb-12 animate-slide-up">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-bold text-white">Últimos Resultados</h2>
-          <router-link to="/partidos" class="text-sm text-primary-400 hover:text-primary-300">Ver todos →</router-link>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <router-link v-for="m in recentResults" :key="m.id" :to="`/partidos/${m.id}`"
-            class="card-gradient rounded-xl p-4 hover:border-surface-600 transition-all cursor-pointer">
-            <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2 flex-1 min-w-0">
-                <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" :style="{ backgroundColor: m.home_team?.color || '#64748b' }">
-                  {{ m.home_team?.name?.charAt(0) }}
-                </div>
-                <span class="text-sm text-white truncate">{{ m.home_team?.name }}</span>
-              </div>
-              <div class="text-center px-2 flex-shrink-0">
-                <span class="text-base font-bold text-white">{{ m.home_score }} - {{ m.away_score }}</span>
-              </div>
-              <div class="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                <span class="text-sm text-white truncate">{{ m.away_team?.name }}</span>
-                <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" :style="{ backgroundColor: m.away_team?.color || '#64748b' }">
-                  {{ m.away_team?.name?.charAt(0) }}
-                </div>
-              </div>
-            </div>
-          </router-link>
-        </div>
-      </section>
-    </div>
-
-    <!-- Loading -->
+    <!-- Loading State -->
     <div v-if="loading" class="flex justify-center py-20">
       <div class="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+
+    <!-- Active Championships -->
+    <div v-else class="max-w-7xl mx-auto px-4 sm:px-6 space-y-24">
+      <div v-for="champ in activeChampionships" :key="champ.id" class="space-y-8 animate-slide-up">
+        
+        <!-- Championship Header -->
+        <div class="card-gradient rounded-2xl p-8 border-t-4 border-primary-500 shadow-2xl relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 text-surface-800/20">
+            <svg class="w-48 h-48" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
+          </div>
+          <div class="relative z-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-400 text-xs font-medium mb-4">
+              <span class="w-2 h-2 rounded-full bg-primary-400 badge-live" />
+              Torneo Activo
+            </div>
+            <h2 class="text-3xl font-extrabold text-white">{{ champ.name }}</h2>
+            <div class="flex flex-wrap gap-4 mt-3 text-sm text-surface-400">
+              <span v-if="champ.sport" class="bg-surface-800 px-3 py-1 rounded-md border border-surface-700">⚽ {{ champ.sport }}</span>
+              <span v-if="champ.category" class="bg-surface-800 px-3 py-1 rounded-md border border-surface-700">👥 {{ champ.category }}</span>
+              <span v-if="champ.year" class="bg-surface-800 px-3 py-1 rounded-md border border-surface-700">📅 {{ champ.year }}</span>
+            </div>
+            <p v-if="champ.description" class="mt-4 text-surface-300 max-w-3xl">{{ champ.description }}</p>
+            
+            <div v-if="champ.regulations" class="mt-6 p-4 rounded-xl bg-surface-900/50 border border-surface-800">
+              <h4 class="text-sm font-bold text-surface-200 mb-2">📜 Reglamento e Información</h4>
+              <p class="text-sm text-surface-400 whitespace-pre-line">{{ champ.regulations }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          <!-- Standings (Col Span 2) -->
+          <div class="lg:col-span-2 space-y-6">
+            <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+              <span class="text-primary-400">📊</span> Tabla de Posiciones
+            </h3>
+            
+            <div v-if="!champ.groupedStandings || !champ.groupedStandings.length" class="card-gradient rounded-xl p-8 text-center border border-surface-800">
+              <p class="text-surface-500">No hay datos de posiciones aún para este torneo.</p>
+            </div>
+            
+            <div v-else v-for="group in champ.groupedStandings" :key="group.name" class="card-gradient rounded-xl p-6 border border-surface-800">
+              <h4 v-if="group.name" class="text-lg font-bold text-white mb-4">{{ group.name }}</h4>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="text-surface-400 text-xs border-b border-surface-700">
+                      <th class="text-left py-2 px-2 w-8">POS</th>
+                      <th class="text-left py-2 px-2">EQUIPO</th>
+                      <th class="text-center py-2 px-1">PJ</th>
+                      <th class="text-center py-2 px-1">PG</th>
+                      <th class="text-center py-2 px-1">PE</th>
+                      <th class="text-center py-2 px-1">PP</th>
+                      <th class="text-center py-2 px-1">GF</th>
+                      <th class="text-center py-2 px-1">GC</th>
+                      <th class="text-center py-2 px-1">DG</th>
+                      <th class="text-center py-2 px-1 font-bold text-primary-400">PTS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(s, i) in group.items" :key="s.id" class="border-b border-surface-800/50 hover:bg-surface-800/30 transition-colors">
+                      <td class="py-3 px-2 font-bold" :class="i < 2 ? 'text-primary-400' : 'text-surface-400'">{{ i + 1 }}</td>
+                      <td class="py-3 px-2">
+                        <div class="flex items-center gap-2">
+                          <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" :style="{ backgroundColor: s.team?.color || '#64748b' }">{{ s.team?.name?.charAt(0) }}</div>
+                          <router-link :to="`/equipos/${s.team?.id}`" class="text-white font-medium hover:text-primary-400 transition-colors">{{ s.team?.name }}</router-link>
+                        </div>
+                      </td>
+                      <td class="text-center text-surface-300">{{ s.played }}</td>
+                      <td class="text-center text-surface-300">{{ s.won }}</td>
+                      <td class="text-center text-surface-300">{{ s.drawn }}</td>
+                      <td class="text-center text-surface-300">{{ s.lost }}</td>
+                      <td class="text-center text-surface-300">{{ s.goals_for }}</td>
+                      <td class="text-center text-surface-300">{{ s.goals_against }}</td>
+                      <td class="text-center" :class="s.goal_difference > 0 ? 'text-primary-400' : s.goal_difference < 0 ? 'text-danger-500' : 'text-surface-400'">{{ s.goal_difference > 0 ? '+' : '' }}{{ s.goal_difference }}</td>
+                      <td class="text-center font-bold text-white text-base">{{ s.points }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scorers & Matches Sidebar -->
+          <div class="space-y-8">
+            <!-- Top Scorers -->
+            <div>
+              <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">🏆 Goleadores</h3>
+              <div class="card-gradient rounded-xl p-5 border border-surface-800">
+                <div v-if="champ.scorers?.length" class="space-y-3">
+                  <div v-for="(scorer, i) in champ.scorers.slice(0, 5)" :key="scorer.id" class="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-800/30 transition-colors">
+                    <span class="w-6 text-center font-bold" :class="i === 0 ? 'text-warning-500' : i === 1 ? 'text-surface-300' : i === 2 ? 'text-orange-400' : 'text-surface-500'">{{ i + 1 }}</span>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-white truncate">{{ scorer.full_name }}</p>
+                      <p class="text-xs text-surface-500 truncate">{{ scorer.team?.name }}</p>
+                    </div>
+                    <span class="text-lg font-bold text-primary-400">{{ scorer.goals }}</span>
+                  </div>
+                </div>
+                <p v-else class="text-surface-500 text-sm text-center py-4">Sin goles registrados.</p>
+              </div>
+            </div>
+
+            <!-- Unified Calendar / Matches -->
+            <div>
+              <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">🗓 Partidos & Calendario</h3>
+              <div class="card-gradient rounded-xl p-5 border border-surface-800">
+                <div v-if="champ.matches?.length" class="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                  <router-link v-for="m in champ.matches" :key="m.id" :to="`/partidos/${m.id}`" class="block bg-surface-900/50 rounded-lg p-3 hover:bg-surface-800 transition-colors border border-surface-800 hover:border-primary-500/30">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="text-[10px] text-surface-500 uppercase tracking-wider font-semibold">{{ formatDate(m.match_date) }}</div>
+                      <div v-if="m.phase?.name || m.round?.name" class="text-[9px] bg-primary-900/30 text-primary-400 px-1.5 py-0.5 rounded-full uppercase font-bold tracking-wider text-right line-clamp-1 max-w-[60%]">
+                        {{ m.phase?.name }} <span v-if="m.phase?.name && m.round?.name">-</span> {{ m.round?.name }}
+                      </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2 flex-1 min-w-0">
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0" :style="{ backgroundColor: m.home_team?.color || '#64748b' }">{{ m.home_team?.name?.charAt(0) }}</div>
+                        <span class="text-xs text-white truncate">{{ m.home_team?.name }}</span>
+                      </div>
+                      
+                      <div class="px-2 text-center flex-shrink-0">
+                        <span v-if="m.status === 'finished' || m.status === 'in_progress'" class="text-sm font-bold text-white px-2 py-0.5 rounded bg-surface-800">{{ m.home_score }} - {{ m.away_score }}</span>
+                        <span v-else class="text-xs font-bold text-primary-400">{{ m.match_time ? m.match_time.substring(0,5) : 'VS' }}</span>
+                      </div>
+                      
+                      <div class="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                        <span class="text-xs text-white truncate">{{ m.away_team?.name }}</span>
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0" :style="{ backgroundColor: m.away_team?.color || '#64748b' }">{{ m.away_team?.name?.charAt(0) }}</div>
+                      </div>
+                    </div>
+                  </router-link>
+                </div>
+                <p v-else class="text-surface-500 text-sm text-center py-4">No hay partidos programados.</p>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+
+        <div class="h-px bg-gradient-to-r from-transparent via-surface-700 to-transparent my-16"></div>
+      </div>
+      
+      <div v-if="!activeChampionships.length" class="text-center py-32">
+        <div class="inline-flex w-16 h-16 rounded-full bg-surface-800 items-center justify-center mb-4">
+          <span class="text-3xl">🏆</span>
+        </div>
+        <h2 class="text-2xl font-bold text-white mb-2">No hay torneos activos</h2>
+        <p class="text-surface-400">Actualmente no se está disputando ningún campeonato.</p>
+      </div>
     </div>
   </div>
 </template>
@@ -216,49 +177,58 @@ import { ref, onMounted } from 'vue';
 import { useApi } from '../../composables/useApi.js';
 
 const { get, loading } = useApi();
-
-const championship = ref(null);
-const stats = ref(null);
-const standings = ref([]);
-const scorers = ref([]);
-const upcomingMatches = ref([]);
-const liveMatches = ref([]);
-const recentResults = ref([]);
+const activeChampionships = ref([]);
 
 function formatDate(d) {
-  if (!d) return '';
-  return new Date(d).toLocaleDateString('es', { day: 'numeric', month: 'short' });
+  if (!d) return 'Sin fecha';
+  return new Date(d).toLocaleDateString('es', { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
 onMounted(async () => {
   try {
-    // Get active championship
     const champData = await get('/campeonatos', { status: 'active' });
     const champs = champData.data || [];
-    if (champs.length) {
-      championship.value = champs[0];
-      const id = championship.value.id;
-
-      // Load data in parallel
-      const [standingsData, scorersData, statsData, matchesData, liveData] = await Promise.all([
-        get(`/campeonatos/${id}/posiciones`).catch(() => ({ data: [] })),
-        get(`/campeonatos/${id}/goleadores`).catch(() => ({ data: [] })),
-        get(`/campeonatos/${id}/estadisticas`).catch(() => ({ data: {} })),
-        get(`/partidos`, { championship_id: id }).catch(() => ({ data: [] })),
-        get(`/partidos/en-vivo`).catch(() => ({ data: [] })),
+    
+    // Fetch details for all active championships in parallel
+    const enhancedChamps = await Promise.all(champs.map(async (champ) => {
+      const [standingsData, scorersData, matchesData] = await Promise.all([
+        get(`/campeonatos/${champ.id}/posiciones`).catch(() => ({ data: [] })),
+        get(`/campeonatos/${champ.id}/goleadores`).catch(() => ({ data: [] })),
+        get(`/partidos`, { championship_id: champ.id }).catch(() => ({ data: [] }))
       ]);
+      
+      const allStandings = standingsData.data || [];
+      const groups = {};
+      allStandings.forEach(s => { 
+        const gn = s.group?.name || 'General'; 
+        if (!groups[gn]) groups[gn] = { name: gn === 'General' ? '' : gn, items: [] }; 
+        groups[gn].items.push(s); 
+      });
 
-      standings.value = standingsData.data || [];
-      scorers.value = scorersData.data || [];
-      stats.value = statsData.data || {};
-      liveMatches.value = liveData.data || [];
-
-      const allMatches = matchesData.data || [];
-      upcomingMatches.value = allMatches.filter(m => m.status === 'scheduled').slice(0, 6);
-      recentResults.value = allMatches.filter(m => m.status === 'finished').reverse().slice(0, 4);
-    }
+      return {
+        ...champ,
+        groupedStandings: Object.values(groups),
+        scorers: scorersData.data || [],
+        matches: matchesData.data || []
+      };
+    }));
+    
+    activeChampionships.value = enhancedChamps;
   } catch (err) {
     console.error('Error loading home:', err);
   }
 });
 </script>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #334155;
+  border-radius: 20px;
+}
+</style>

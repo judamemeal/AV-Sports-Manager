@@ -89,6 +89,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Match control (jugar partido)
         Route::post('/partidos/{match}/iniciar', [MatchController::class, 'start']);
         Route::post('/partidos/{match}/eventos', [MatchController::class, 'recordEvent']);
+        Route::delete('/partidos/{match}/eventos/{event}', [MatchController::class, 'deleteEvent']);
         Route::post('/partidos/{match}/finalizar', [MatchController::class, 'finish']);
 
         // Tournament format generation

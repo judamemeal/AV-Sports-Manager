@@ -14,7 +14,8 @@ class StoreTeamRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'championship_id' => ['required', 'exists:championships,id'],
+            'championship_ids' => ['nullable', 'array'],
+            'championship_ids.*' => ['integer', 'exists:championships,id'],
             'name' => ['required', 'string', 'max:255'],
             'course' => ['nullable', 'string', 'max:100'],
             'parallel' => ['nullable', 'string', 'max:10'],

@@ -48,6 +48,7 @@ const routes = [
       { path: 'partidos/crear', name: 'admin-match-create', component: () => import('../pages/admin/MatchForm.vue') },
       { path: 'partidos/:id/editar', name: 'admin-match-edit', component: () => import('../pages/admin/MatchForm.vue') },
       { path: 'partidos/:id/jugar', name: 'admin-match-play', component: () => import('../pages/admin/MatchPlay.vue') },
+      { path: 'programacion', name: 'admin-schedule', component: () => import('../pages/admin/ScheduleManage.vue') },
       { path: 'formatos/:championshipId', name: 'admin-format-builder', component: () => import('../pages/admin/FormatBuilder.vue') },
       { path: 'posiciones', name: 'admin-standings', component: () => import('../pages/admin/StandingsManage.vue') },
       { path: 'usuarios', name: 'admin-users', component: () => import('../pages/admin/UsersManage.vue') },

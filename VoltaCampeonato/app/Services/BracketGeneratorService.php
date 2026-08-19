@@ -77,41 +77,59 @@ class BracketGeneratorService
 
     /**
      * Seed teams into the first round of a bracket.
+     * Expects $teamIds to be ordered by strength/ranking if applicable.
      */
     public function seedTeams(array $matches, array $teamIds): void
     {
-        // Sort matches by bracket_position
         usort($matches, fn ($a, $b) => $a->bracket_position - $b->bracket_position);
-
-        $matchIndex = 0;
         
-        // Pad the teamIds array with nulls to reach the power of 2 size
         $powerOfTwo = count($matches) * 2;
-        while (count($teamIds) < $powerOfTwo) {
-            $teamIds[] = null;
+        $teamCount = count($teamIds);
+        
+        // Calculate how many byes we need
+        $byesCount = $powerOfTwo - $teamCount;
+        
+        // Create an array of pairs
+        $pairs = array_fill(0, count($matches), [null, null]);
+        
+        // 1. Give byes to the top seeds (first elements in array)
+        // 2. Distribute remaining teams.
+        // We will distribute the top teams to the 'home' slots.
+        $topSeeds = array_slice($teamIds, 0, count($matches));
+        $bottomSeeds = array_slice($teamIds, count($matches));
+        
+        // Standard Tennis/FIFA seeding logic:
+        // 1 goes to match 1, 2 goes to match N, 3 goes to match N/2...
+        // For simplicity, we just distribute them sequentially to home, then fill away from the bottom.
+        
+        for ($i = 0; $i < count($matches); $i++) {
+            $pairs[$i][0] = $topSeeds[$i] ?? null;
+        }
+        
+        // Fill the away slots with the bottom seeds, reversed so top seed plays the lowest seed
+        $bottomSeedsReversed = array_reverse($bottomSeeds);
+        for ($i = 0; $i < count($matches); $i++) {
+            $pairs[$i][1] = $bottomSeedsReversed[$i] ?? null;
         }
 
-        for ($i = 0; $i < $powerOfTwo; $i += 2) {
-            if (isset($matches[$matchIndex])) {
-                $homeId = $teamIds[$i] ?? null;
-                $awayId = $teamIds[$i + 1] ?? null;
+        // Now save to database
+        foreach ($matches as $index => $match) {
+            $homeId = $pairs[$index][0];
+            $awayId = $pairs[$index][1];
 
-                $match = $matches[$matchIndex];
-                $match->update([
-                    'home_team_id' => $homeId,
-                    'away_team_id' => $awayId,
-                ]);
+            $match->update([
+                'home_team_id' => $homeId,
+                'away_team_id' => $awayId,
+            ]);
 
-                // Auto-advance if there is a Bye
-                if ($homeId !== null && $awayId === null) {
-                    $match->update(['status' => 'finished', 'home_score' => 1, 'away_score' => 0]);
-                    app(QualificationService::class)->processMatchResult($match);
-                } elseif ($homeId === null && $awayId !== null) {
-                    $match->update(['status' => 'finished', 'home_score' => 0, 'away_score' => 1]);
-                    app(QualificationService::class)->processMatchResult($match);
-                }
+            // Auto-advance if there is a Bye
+            if ($homeId !== null && $awayId === null) {
+                $match->update(['status' => 'finished', 'home_score' => 1, 'away_score' => 0]);
+                app(QualificationService::class)->processMatchResult($match);
+            } elseif ($homeId === null && $awayId !== null) {
+                $match->update(['status' => 'finished', 'home_score' => 0, 'away_score' => 1]);
+                app(QualificationService::class)->processMatchResult($match);
             }
-            $matchIndex++;
         }
     }
 

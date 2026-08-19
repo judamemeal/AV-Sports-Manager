@@ -25,7 +25,8 @@ class MatchController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = GameMatch::with(['homeTeam', 'awayTeam', 'phase', 'championship:id,name']);
+        $query = GameMatch::with(['homeTeam', 'awayTeam', 'phase', 'round', 'championship:id,name'])
+            ->whereHas('championship');
 
         if ($request->filled('championship_id')) {
             $query->where('championship_id', $request->championship_id);
@@ -159,15 +160,58 @@ class MatchController extends Controller
     }
 
     /**
-     * Finish a match — save result and update standings.
+     * Delete a match event (undo).
      */
-    public function finish(GameMatch $match): JsonResponse
+    public function deleteEvent(GameMatch $match, MatchEvent $event): JsonResponse
     {
         if ($match->status->value !== 'in_progress') {
-            return response()->json(['message' => 'Solo se pueden finalizar partidos en juego.'], 422);
+            return response()->json(['message' => 'Solo se pueden eliminar eventos en partidos en juego.'], 422);
         }
 
-        $match->update(['status' => 'finished']);
+        if ($event->game_match_id !== $match->id) {
+            return response()->json(['message' => 'El evento no pertenece a este partido.'], 422);
+        }
+
+        if ($event->type === 'goal') {
+            if ($event->team_id == $match->home_team_id && $match->home_score > 0) {
+                $match->decrement('home_score');
+            } elseif ($event->team_id == $match->away_team_id && $match->away_score > 0) {
+                $match->decrement('away_score');
+            }
+        }
+
+        $event->delete();
+        $match->refresh();
+
+        return response()->json([
+            'message' => 'Evento eliminado.',
+            'score' => [
+                'home' => $match->home_score,
+                'away' => $match->away_score,
+            ],
+        ]);
+    }
+
+    /**
+     * Finish a match — save result and update standings.
+     */
+    public function finish(Request $request, GameMatch $match): JsonResponse
+    {
+        if ($match->status->value !== 'in_progress' && $match->status->value !== 'scheduled') {
+            return response()->json(['message' => 'El partido no se puede finalizar en su estado actual.'], 422);
+        }
+
+        $data = ['status' => 'finished'];
+        
+        if ($request->has('home_score')) {
+            $data['home_score'] = $request->input('home_score');
+        }
+        
+        if ($request->has('away_score')) {
+            $data['away_score'] = $request->input('away_score');
+        }
+
+        $match->update($data);
 
         // Update standings
         $this->standingsService->updateAfterMatch($match);
@@ -202,7 +246,8 @@ class MatchController extends Controller
     public function live(): AnonymousResourceCollection
     {
         $matches = GameMatch::where('status', 'in_progress')
-            ->with(['homeTeam', 'awayTeam', 'championship:id,name', 'events.player'])
+            ->whereHas('championship')
+            ->with(['homeTeam', 'awayTeam', 'championship:id,name', 'events.player', 'round', 'phase'])
             ->get();
 
         return MatchResource::collection($matches);

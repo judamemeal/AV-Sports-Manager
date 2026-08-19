@@ -15,13 +15,22 @@
       <div v-for="(group, date) in groupedByDate" :key="date" class="animate-fade-in">
         <h3 class="text-sm font-semibold text-primary-400 mb-3 uppercase tracking-wider">{{ formatDateHeader(date) }}</h3>
         <div class="space-y-2">
-          <router-link v-for="m in group" :key="m.id" :to="`/partidos/${m.id}`" class="card-gradient rounded-xl p-4 flex items-center justify-between hover:border-primary-500/30 transition-all block">
-            <div class="flex items-center gap-2 flex-1"><div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" :style="{ backgroundColor: m.home_team?.color || '#64748b' }">{{ m.home_team?.name?.charAt(0) }}</div><span class="text-sm text-white truncate">{{ m.home_team?.name || 'TBD' }}</span></div>
-            <div class="px-4 text-center flex-shrink-0">
-              <p v-if="m.status === 'finished' || m.status === 'in_progress'" class="text-lg font-bold text-white">{{ m.home_score }} - {{ m.away_score }}</p>
-              <p v-else class="text-sm font-bold text-surface-500">{{ m.match_time || 'VS' }}</p>
+          <router-link v-for="m in group" :key="m.id" :to="`/partidos/${m.id}`" class="card-gradient rounded-xl p-4 hover:border-primary-500/30 transition-all block">
+            <div class="flex items-center justify-center gap-2 mb-2">
+              <span v-if="!champId" class="text-xs text-primary-400 font-medium">{{ m.championship?.name }}</span>
+              <span v-if="!champId && (m.phase?.name || m.round?.name)" class="text-surface-600 text-xs">•</span>
+              <span v-if="m.phase?.name || m.round?.name" class="text-[10px] bg-primary-900/30 text-primary-400 px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">
+                {{ m.phase?.name }} <span v-if="m.phase?.name && m.round?.name">-</span> {{ m.round?.name }}
+              </span>
             </div>
-            <div class="flex items-center gap-2 flex-1 justify-end"><span class="text-sm text-white truncate">{{ m.away_team?.name || 'TBD' }}</span><div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" :style="{ backgroundColor: m.away_team?.color || '#64748b' }">{{ m.away_team?.name?.charAt(0) }}</div></div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 flex-1"><div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" :style="{ backgroundColor: m.home_team?.color || '#64748b' }">{{ m.home_team?.name?.charAt(0) }}</div><span class="text-sm text-white truncate">{{ m.home_team?.name || 'TBD' }}</span></div>
+              <div class="px-4 text-center flex-shrink-0">
+                <p v-if="m.status === 'finished' || m.status === 'in_progress'" class="text-lg font-bold text-white">{{ m.home_score }} - {{ m.away_score }}</p>
+                <p v-else class="text-sm font-bold text-surface-500">{{ m.match_time || 'VS' }}</p>
+              </div>
+              <div class="flex items-center gap-2 flex-1 justify-end"><span class="text-sm text-white truncate">{{ m.away_team?.name || 'TBD' }}</span><div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" :style="{ backgroundColor: m.away_team?.color || '#64748b' }">{{ m.away_team?.name?.charAt(0) }}</div></div>
+            </div>
           </router-link>
         </div>
       </div>

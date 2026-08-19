@@ -9,32 +9,35 @@ use Illuminate\Support\Collection;
 class GroupGeneratorService
 {
     /**
-     * Distribute teams into groups randomly.
+     * Distribute teams into groups evenly using virtual pots (cabezas de serie).
      */
     public function distributeRandomly(array $teamIds, int $groupCount, int $phaseId): array
     {
-        $shuffled = collect($teamIds)->shuffle();
         $groups = [];
-
         for ($i = 0; $i < $groupCount; $i++) {
             $groupName = 'Grupo ' . chr(65 + $i); // A, B, C, D...
-            $group = Group::create([
+            $groups[] = Group::create([
                 'phase_id' => $phaseId,
                 'name' => $groupName,
                 'qualified_count' => 2,
             ]);
-
-            $groups[] = $group;
         }
 
-        // Distribute teams round-robin style into groups
-        $groupIndex = 0;
-        foreach ($shuffled as $seed => $teamId) {
-            $groups[$groupIndex]->teams()->attach($teamId, [
-                'seed_position' => $seed + 1,
-            ]);
+        // Teams are assumed to be sorted by ranking/strength.
+        // Divide them into virtual "pots" (bombos) of size $groupCount.
+        $teamsPerGroup = ceil(count($teamIds) / $groupCount);
+        $pots = array_chunk($teamIds, $groupCount);
 
-            $groupIndex = ($groupIndex + 1) % $groupCount;
+        foreach ($pots as $potIndex => $pot) {
+            // Shuffle only the teams inside the pot
+            shuffle($pot);
+
+            // Distribute one team from this pot to each group
+            foreach ($pot as $groupIndex => $teamId) {
+                $groups[$groupIndex]->teams()->attach($teamId, [
+                    'seed_position' => $potIndex + 1,
+                ]);
+            }
         }
 
         return $groups;

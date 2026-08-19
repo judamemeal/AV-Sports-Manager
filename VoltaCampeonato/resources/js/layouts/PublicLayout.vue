@@ -93,10 +93,8 @@ const mobileOpen = ref(false);
 
 const navLinks = [
   { to: '/', label: 'Inicio' },
-  { to: '/campeonatos', label: 'Campeonatos' },
   { to: '/equipos', label: 'Equipos' },
   { to: '/jugadores', label: 'Jugadores' },
-  { to: '/partidos', label: 'Partidos' },
   { to: '/calendario', label: 'Calendario' },
 ];
 

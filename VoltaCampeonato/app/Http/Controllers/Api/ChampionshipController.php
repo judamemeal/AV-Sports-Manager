@@ -46,10 +46,18 @@ class ChampionshipController extends Controller
 
     public function store(StoreChampionshipRequest $request): JsonResponse
     {
-        $championship = Championship::create($request->validated());
+        $data = $request->validated();
+        $teamIds = $data['team_ids'] ?? [];
+        unset($data['team_ids']);
+
+        $championship = Championship::create($data);
+
+        if (!empty($teamIds)) {
+            $championship->teams()->sync($teamIds);
+        }
 
         return response()->json(
-            new ChampionshipResource($championship),
+            new ChampionshipResource($championship->load('teams')),
             201
         );
     }
@@ -64,9 +72,17 @@ class ChampionshipController extends Controller
 
     public function update(UpdateChampionshipRequest $request, Championship $championship): ChampionshipResource
     {
-        $championship->update($request->validated());
+        $data = $request->validated();
+        $teamIds = $data['team_ids'] ?? null;
+        unset($data['team_ids']);
 
-        return new ChampionshipResource($championship);
+        $championship->update($data);
+
+        if (is_array($teamIds)) {
+            $championship->teams()->sync($teamIds);
+        }
+
+        return new ChampionshipResource($championship->load('teams'));
     }
 
     public function destroy(Championship $championship): JsonResponse

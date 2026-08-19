@@ -25,6 +25,8 @@ class UpdateMatchRequest extends FormRequest
             'venue' => ['nullable', 'string', 'max:255'],
             'referee' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string', 'in:scheduled,in_progress,finished,suspended,cancelled'],
+            'home_score' => ['nullable', 'integer', 'min:0'],
+            'away_score' => ['nullable', 'integer', 'min:0'],
         ];
     }
 }
